@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import PlatformTable from '../components/PlatformTable';
 import ModuleUsers from './modules/ModuleUsers';
+import ModuleSchools from './modules/ModuleSchools';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -129,18 +130,7 @@ export default function Dashboard() {
         )}
         
         {activeModule === 'schools' && (
-          <PlatformTable 
-            title="Listado de Colegios" 
-            description="Todos los colegios clientes suscritos a la plataforma Hamutay." 
-            endpoint="schools" 
-            columns={[
-              { header: 'Nombre', accessor: r => r.name },
-              { header: 'Email de Contacto', accessor: r => r.email },
-              { header: 'Teléfono', accessor: r => r.phone || '-' },
-              { header: 'Plan Actual', accessor: r => r.plan_code?.toUpperCase() },
-              { header: 'Estado', accessor: r => r.subscription_status || (r.is_active ? 'Activo' : 'Inactivo') }
-            ]} 
-          />
+          <ModuleSchools />
         )}
 
         {activeModule === 'plans' && (
