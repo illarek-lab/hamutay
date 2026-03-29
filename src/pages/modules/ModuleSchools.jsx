@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2, Plus, Edit2, Trash2, Building2, Search, X, AlertCircle, RefreshCcw, LayoutGrid, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Loader2, Plus, Edit2, Trash2, Building2, Search, X, AlertCircle, RefreshCcw, LayoutGrid, AlertTriangle, UploadCloud } from 'lucide-react';
 
 export default function ModuleSchools() {
   const [schools, setSchools] = useState([]);
@@ -20,6 +20,11 @@ export default function ModuleSchools() {
     institution_type: 'private', founding_year: new Date().getFullYear(),
     modality: 'presencial', language: 'es', timezone: 'America/Lima', plan_code: 'free'
   });
+  
+  // Storage (R2 / S3) state
+  const [selectedLogo, setSelectedLogo] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   // Generador inteligente de Slugs (e.g. "Mi Colegio 123" -> "mi-colegio-123")
   const generateSlug = (nameStr) => {
@@ -72,6 +77,8 @@ export default function ModuleSchools() {
       institution_type: 'private', founding_year: new Date().getFullYear(),
       modality: 'presencial', language: 'es', timezone: 'America/Lima', plan_code: 'free'
     });
+    setSelectedLogo(null);
+    setLogoPreview(null);
     setIsModalOpen(true);
   };
 
@@ -85,7 +92,22 @@ export default function ModuleSchools() {
       modality: school.modality || 'presencial', language: school.language || 'es', 
       timezone: school.timezone || 'America/Lima', plan_code: school.plan_code || 'free'
     });
+    setSelectedLogo(null);
+    setLogoPreview(school.logo_url || null);
     setIsModalOpen(true);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert('Por favor, selecciona un archivo de imagen (JPG, PNG, WebP).');
+        return;
+      }
+      setSelectedLogo(file);
+      const tempUrl = URL.createObjectURL(file);
+      setLogoPreview(tempUrl);
+    }
   };
 
   const handleFormChange = (e) => {
@@ -94,6 +116,50 @@ export default function ModuleSchools() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  // Lógica Maestra de Carga asíncrona hacia S3 / R2 usando Presigned URLs con rastreo intenso
+  const uploadLogoToCloud = async (schoolId, file, token) => {
+    let upload_url, public_url;
+    
+    // 1. Obtener boleto (URL de carga)
+    try {
+      const preRes = await fetch('http://localhost:8000/platform/storage/presigned-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ entity: 'school', entity_id: schoolId, filename: file.name, content_type: file.type })
+      });
+      const data = await preRes.json();
+      if (!preRes.ok) throw new Error(data.detail || 'Firma rechazada');
+      upload_url = data.upload_url;
+      public_url = data.public_url;
+    } catch(e) {
+      throw new Error('Fallo al obtener Presigned URL del Backend: ' + e.message);
+    }
+
+    // 2. Transferencia Binaria Directa (React -> Nube) escapando del Backend
+    try {
+      const uploadRes = await fetch(upload_url, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file
+      });
+      if (!uploadRes.ok) throw new Error('Cloudflare/AWS rechazó la transacción.');
+    } catch(e) {
+      throw new Error('ERROR CORS R2/S3 (Failed to fetch): Tu Bucket en Cloudflare R2 debe tener una política de CORS configurada (En las opciones del bucket, "CORS Settings" deben permitir el origin "http://localhost:5173", methods ["PUT", "GET"], headers ["*"]). Detalle técnico: ' + e.message);
+    }
+
+    // 3. Confirmación (Cierre de Transacción)
+    try {
+      const confirmRes = await fetch('http://localhost:8000/platform/storage/confirm', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ entity: 'school', entity_id: schoolId, public_url: public_url })
+      });
+      if (!confirmRes.ok) throw new Error('El backend no incrustó la URL.');
+    } catch(e) {
+       throw new Error('Fallo en la confirmación a Base de Datos: ' + e.message);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -109,10 +175,9 @@ export default function ModuleSchools() {
 
     try {
       let finalPayload = { ...formData };
-      
-      // Asegurarse de formatear numeros u otros campos criticos si es necesario.
       finalPayload.founding_year = parseInt(finalPayload.founding_year) || 1990;
 
+      // Despliegue del texto al DB
       const response = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -121,8 +186,15 @@ export default function ModuleSchools() {
       
       const data = await response.json();
       if (!response.ok) {
-        // En caso de conflicto u otro error
-        throw new Error(data.detail || 'Fallo de registro al servidor.');
+        throw new Error(data.detail ? JSON.stringify(data.detail) : 'Fallo de registro crudo al servidor.');
+      }
+      
+      // Capturamos el ID asegurado que nos responde FastAPI, o usamos el existente
+      const securedSchoolId = editingSchool ? editingSchool.id : data.id;
+
+      // Si el equipo subió un nuevo binario, enlazamos el uploadLogoToCloud pasándole el id seguro
+      if (selectedLogo && securedSchoolId) {
+        await uploadLogoToCloud(securedSchoolId, selectedLogo, token);
       }
       
       setIsModalOpen(false);
@@ -246,10 +318,21 @@ export default function ModuleSchools() {
                 {filteredSchools.map(sch => (
                   <tr key={sch.id} style={{ opacity: activeTab === 'deleted' ? 0.5 : 1, transition: 'background 0.2s', borderBottom: '1px solid rgba(0,0,0,0.03)' }}>
                     <td>
-                      <div style={{ fontWeight: '600', color: 'var(--color-text)', marginBottom: '0.2rem', textDecoration: activeTab === 'deleted' ? 'line-through' : 'none' }}>
-                        {sch.name}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                         {sch.logo_url ? (
+                            <img src={sch.logo_url} alt="logo" style={{ width: '38px', height: '38px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(0,0,0,0.1)' }} />
+                         ) : (
+                            <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'rgba(45, 55, 63, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-secondary)' }}>
+                               <Building2 size={18} />
+                            </div>
+                         )}
+                         <div>
+                            <div style={{ fontWeight: '600', color: 'var(--color-text)', marginBottom: '0.2rem', textDecoration: activeTab === 'deleted' ? 'line-through' : 'none' }}>
+                              {sch.name}
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{sch.slug} | {sch.district || 'NA'}</div>
+                         </div>
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{sch.slug} | {sch.district || 'NA'}</div>
                     </td>
                     <td>
                       <div>{sch.email}</div>
@@ -304,8 +387,29 @@ export default function ModuleSchools() {
             
             <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1.5rem' }}>
               
-              {/* COLUMNA 1: Datos Base */}
+              {/* COLUMNA 1: Datos Base y Archivo Logo */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                 
+                 <fieldset style={{ border: '1px dashed rgba(105, 151, 126, 0.5)', borderRadius: '12px', padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(105, 151, 126, 0.02)' }}>
+                     <legend style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-tertiary)' }}>Isotipo Emblema (S3 / R2 Logo)</legend>
+                     <input type="file" accept="image/png, image/jpeg, image/webp" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+                     
+                     <div 
+                        onClick={() => fileInputRef.current.click()} 
+                        style={{ width: '80px', height: '80px', borderRadius: '50%', background: logoPreview ? 'white' : 'rgba(45, 55, 63, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.1)', overflow: 'hidden', marginBottom: '0.5rem', transition: 'all 0.2s' }}
+                        title="Haz clic para subir un logo"
+                     >
+                       {logoPreview ? (
+                          <img src={logoPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                       ) : (
+                          <UploadCloud size={28} color="var(--color-text-muted)" />
+                       )}
+                     </div>
+                     <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textAlign: 'center' }}>
+                       {selectedLogo ? selectedLogo.name : 'Haz clic para explorar fototeca.'}
+                     </span>
+                 </fieldset>
+
                  <fieldset style={{ border: '1px solid rgba(0,0,0,0.08)', borderRadius: '12px', padding: '1rem', flex: 1 }}>
                      <legend style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-secondary)' }}>Identidad de Marca</legend>
                      <div>
