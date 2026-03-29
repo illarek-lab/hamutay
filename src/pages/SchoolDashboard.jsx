@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, ArrowLeft, Building2, UserPlus, Shield, Mail, Phone, MapPin, Globe, Search, UserCheck, UserX, X, Edit2, Trash2, RefreshCcw } from 'lucide-react';
+import { Loader2, ArrowLeft, Building2, UserPlus, Shield, Mail, Phone, MapPin, Globe, Search, UserCheck, UserX, X, Edit2, Trash2, RefreshCcw, UploadCloud, User } from 'lucide-react';
 import StorageImage from '../components/StorageImage';
 
 export default function SchoolDashboard() {
@@ -23,8 +23,11 @@ export default function SchoolDashboard() {
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({
     first_name: '', last_name: '', email: '', password: '',
-    id_type: 'DNI', id_number: '', role_id: '', phone: ''
+    id_type: 'DNI', id_number: '', role_id: '', phone: '',
+    birth_date: '', address: '', emergency_contact_name: '', emergency_contact_phone: ''
   });
+  const [selectedAvatar, setSelectedAvatar] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [formMsg, setFormMsg] = useState({ type: '', text: '' });
 
@@ -90,12 +93,23 @@ export default function SchoolDashboard() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleAvatarChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedAvatar(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
   const openCreateModal = () => {
     setEditingUser(null);
     setFormMsg({ type: '', text: '' });
+    setSelectedAvatar(null);
+    setAvatarPreview(null);
     setFormData({
       first_name: '', last_name: '', email: '', password: '',
-      id_type: 'DNI', id_number: '', role_id: roles.length > 0 ? roles[0].id : '', phone: ''
+      id_type: 'DNI', id_number: '', role_id: roles.length > 0 ? roles[0].id : '', phone: '',
+      birth_date: '', address: '', emergency_contact_name: '', emergency_contact_phone: ''
     });
     setIsModalOpen(true);
   };
@@ -103,6 +117,8 @@ export default function SchoolDashboard() {
   const openEditModal = (user) => {
     setEditingUser(user);
     setFormMsg({ type: '', text: '' });
+    setSelectedAvatar(null);
+    setAvatarPreview(null);
     setFormData({
       first_name: user.first_name || '',
       last_name: user.last_name || '',
@@ -111,9 +127,42 @@ export default function SchoolDashboard() {
       id_type: user.id_type || 'DNI',
       id_number: user.id_number || '',
       role_id: user.role_id || (roles.length > 0 ? roles[0].id : ''),
-      phone: user.phone || ''
+      phone: user.phone || '',
+      birth_date: user.birth_date ? user.birth_date.split('T')[0] : '',
+      address: user.address || '',
+      emergency_contact_name: user.emergency_contact_name || '',
+      emergency_contact_phone: user.emergency_contact_phone || ''
     });
     setIsModalOpen(true);
+  };
+
+  const uploadAvatarToCloud = async (userId, file, token) => {
+    try {
+      const preRes = await fetch('http://localhost:8000/platform/storage/presigned-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ entity: 'school_user', entity_id: userId, filename: file.name, content_type: file.type || 'image/jpeg' })
+      });
+      const preData = await preRes.json();
+      if (!preRes.ok) throw new Error('Firma Cloudflare rechazada');
+      
+      const uploadRes = await fetch(preData.upload_url, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'image/jpeg' },
+        body: file
+      });
+      if (!uploadRes.ok) throw new Error('Cloudflare rechazó el avatar');
+
+      const confirmRes = await fetch('http://localhost:8000/platform/storage/confirm', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ entity: 'school_user', entity_id: userId, key: preData.key })
+      });
+      if (!confirmRes.ok) throw new Error('Error al confirmar foto en DB');
+    } catch (e) {
+      console.error('Avatar Error:', e);
+      throw e;
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -124,14 +173,10 @@ export default function SchoolDashboard() {
     try {
       const token = localStorage.getItem('token');
       const payload = { ...formData };
-      if (editingUser && !payload.password) {
-        delete payload.password;
-      }
+      if (!payload.birth_date) payload.birth_date = null;
+      if (editingUser && !payload.password) delete payload.password;
 
-      const url = editingUser 
-        ? `http://localhost:8000/platform/schools/${id}/users/${editingUser.id}` 
-        : `http://localhost:8000/platform/schools/${id}/users`;
-      
+      const url = editingUser ? `http://localhost:8000/platform/schools/${id}/users/${editingUser.id}` : `http://localhost:8000/platform/schools/${id}/users`;
       const method = editingUser ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {
@@ -143,7 +188,13 @@ export default function SchoolDashboard() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail ? (typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail)) : 'Fallo en servidor.');
       
-      setFormMsg({ type: 'success', text: `Operación exitosa.` });
+      const userId = editingUser ? editingUser.id : data.id;
+      if (selectedAvatar && userId) {
+        setFormMsg({ type: 'success', text: `Datos guardados, subiendo fotografía...` });
+        await uploadAvatarToCloud(userId, selectedAvatar, token);
+      }
+
+      setFormMsg({ type: 'success', text: `Usuario guardado exitosamente.` });
       setTimeout(() => {
         setIsModalOpen(false);
         fetchUsers();
@@ -322,9 +373,18 @@ export default function SchoolDashboard() {
                   <tbody>
                     {filteredUsers.map(u => (
                       <tr key={u.id} style={{ opacity: activeTab === 'deleted' ? 0.6 : 1, transition: 'background 0.2s', borderBottom: '1px solid rgba(0,0,0,0.03)' }}>
-                        <td>
-                          <div style={{ fontWeight: '600', color: 'var(--color-text)', marginBottom: '0.2rem' }}>{u.first_name} {u.last_name || ''}</div>
-                          <div style={{ fontSize: '0.8rem' }}>{u.email}</div>
+                        <td style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(45, 55, 63, 0.05)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {u.avatar_path ? (
+                              <StorageImage fileKey={u.avatar_path} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <User size={20} color="var(--color-text-muted)" />
+                            )}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: '600', color: 'var(--color-text)', marginBottom: '0.2rem' }}>{u.first_name} {u.last_name || ''}</div>
+                            <div style={{ fontSize: '0.8rem' }}>{u.email}</div>
+                          </div>
                         </td>
                         <td>{u.id_type} {u.id_number}</td>
                         <td>
@@ -368,29 +428,53 @@ export default function SchoolDashboard() {
               <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}><X size={24} /></button>
             </div>
             
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1.2rem' }}>
-                <div><label className="input-label">Nombres *</label><input required type="text" name="first_name" value={formData.first_name} onChange={handleFormChange} className="sys-input" placeholder="Ej: Carlos" /></div>
-                <div><label className="input-label">Apellidos *</label><input required type="text" name="last_name" value={formData.last_name} onChange={handleFormChange} className="sys-input" placeholder="Ej: Ramos" /></div>
-              </div>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              <div style={{ display: 'flex', gap: '2rem' }}>
+                <div style={{ width: '120px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem' }}>
+                  <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'rgba(45, 55, 63, 0.05)', border: '2px dashed rgba(45, 55, 63, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (editingUser && editingUser.avatar_path) ? (
+                      <StorageImage fileKey={editingUser.avatar_path} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <User size={40} color="var(--color-text-muted)" />
+                    )}
+                  </div>
+                  <label style={{ background: 'white', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', padding: '0.4rem 0.8rem', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', textAlign: 'center', fontWeight: 600 }}>
+                    <UploadCloud size={14} style={{ marginRight: '0.3rem', verticalAlign: 'middle' }} /> Foto
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
+                  </label>
+                </div>
+                
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1.2rem' }}>
+                    <div><label className="input-label">Nombres *</label><input required type="text" name="first_name" value={formData.first_name} onChange={handleFormChange} className="sys-input" placeholder="Ej: Carlos" /></div>
+                    <div><label className="input-label">Apellidos *</label><input required type="text" name="last_name" value={formData.last_name} onChange={handleFormChange} className="sys-input" placeholder="Ej: Ramos" /></div>
+                  </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1.2rem' }}>
-                <div><label className="input-label">Correo (Email) *</label><input required type="email" name="email" value={formData.email} onChange={handleFormChange} className="sys-input" placeholder="director@colegio.com" /></div>
-                <div>
-                  <label className="input-label">Contraseña {editingUser && '(En blanco conserva original)'}</label>
-                  <input required={!editingUser} type="password" name="password" value={formData.password} onChange={handleFormChange} className="sys-input" placeholder="Mínimo 8 caracteres" />
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1.2rem' }}>
+                    <div><label className="input-label">Correo (Email) *</label><input required type="email" name="email" value={formData.email} onChange={handleFormChange} className="sys-input" placeholder="director@colegio.com" /></div>
+                    <div><label className="input-label">Contraseña {editingUser && '(Opcional)'}</label><input required={!editingUser} type="password" name="password" value={formData.password} onChange={handleFormChange} className="sys-input" placeholder="Mínimo 8 caracteres" /></div>
+                  </div>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr', gap: '1.2rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 1fr', gap: '1.2rem' }}>
                 <div>
                   <label className="input-label">Tipo Doc</label>
                   <select name="id_type" value={formData.id_type} onChange={handleFormChange} className="sys-input">
                     <option value="DNI">DNI</option><option value="CE">CE</option><option value="PASSPORT">PAS</option>
                   </select>
                 </div>
-                <div><label className="input-label">N° de Documento *</label><input required type="text" name="id_number" value={formData.id_number} onChange={handleFormChange} className="sys-input" /></div>
-                <div><label className="input-label">Teléfono Móvil</label><input type="text" name="phone" value={formData.phone} onChange={handleFormChange} className="sys-input" placeholder="+51..." /></div>
+                <div><label className="input-label">N° Documento *</label><input required type="text" name="id_number" value={formData.id_number} onChange={handleFormChange} className="sys-input" /></div>
+                <div><label className="input-label">Móvil</label><input type="text" name="phone" value={formData.phone} onChange={handleFormChange} className="sys-input" placeholder="+51..." /></div>
+                <div><label className="input-label">F. Nacimiento</label><input type="date" name="birth_date" value={formData.birth_date} onChange={handleFormChange} className="sys-input" style={{ color: formData.birth_date ? 'inherit' : 'var(--color-text-muted)' }} /></div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)', gap: '1.2rem' }}>
+                <div><label className="input-label">Dirección</label><input type="text" name="address" value={formData.address} onChange={handleFormChange} className="sys-input" placeholder="Av. Principal 123" /></div>
+                <div><label className="input-label">Emergencia (Persona)</label><input type="text" name="emergency_contact_name" value={formData.emergency_contact_name} onChange={handleFormChange} className="sys-input" placeholder="Nombre contacto" /></div>
+                <div><label className="input-label">Emergencia (Telf)</label><input type="text" name="emergency_contact_phone" value={formData.emergency_contact_phone} onChange={handleFormChange} className="sys-input" placeholder="Telf urgencias" /></div>
               </div>
 
               <fieldset style={{ border: '1px solid rgba(105, 151, 126, 0.3)', borderRadius: '12px', padding: '1rem', background: 'rgba(105, 151, 126, 0.02)', marginTop: '0.5rem' }}>
