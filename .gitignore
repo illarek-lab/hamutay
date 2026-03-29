@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+docs/flat-design-peruvian-pattern
+docs/hamutay_api.postman_collection.json
+docs/platform_api.md
+

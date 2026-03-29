@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500;600&display=swap');
 
 :root {
-  /* Andean Color Palette */
-  --color-bg: #14161C;
-  --color-bg-alt: #1F222B;
-  --color-primary: #D15B40; /* Terracotta */
-  --color-primary-glow: rgba(209, 91, 64, 0.4);
-  --color-secondary: #E3B448; /* Mustard Gold */
-  --color-tertiary: #528E73; /* Emerald/Andean Green */
-  --color-text: #F4F1ED;
-  --color-text-muted: #A3A6B4;
+  /* Andean Color Palette from Pattern */
+  --color-bg: #344049; /* Dark slate */
+  --color-bg-alt: #2D373F;
+  --color-primary: #D34937; /* Vermilion Red */
+  --color-primary-glow: rgba(211, 73, 55, 0.4);
+  --color-secondary: #E09F39; /* Mustard Orange */
+  --color-tertiary: #69977E; /* Sage Green */
+  --color-text: #EEE2CA; /* Off-white/Cream */
+  --color-text-muted: #B0BCC5;
   
   --font-heading: 'Outfit', sans-serif;
   --font-body: 'Inter', sans-serif;

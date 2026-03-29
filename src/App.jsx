@@ -21,7 +21,7 @@ function App() {
       <header className="header glass">
         <div className="container header-content">
           <a href="/" className="logo">
-             Hamutay <span>Schools</span>
+            <img src="/bear-logo.png" alt="Hamutay Logo" style={{ width: '36px', height: '36px', borderRadius: '8px' }} /> Hamutay <span>Schools</span>
           </a>
           <nav>
             <a href="/login" className="btn btn-secondary" style={{ padding: '0.5rem 1.2rem' }}>
@@ -108,7 +108,7 @@ function App() {
         <div className="container">
           <div className="footer-content">
             <div className="logo" style={{ fontSize: '1.2rem' }}>
-              Hamutay <span>Schools</span>
+              <img src="/bear-logo.png" alt="Hamutay Logo" style={{ width: '28px', height: '28px', borderRadius: '6px' }} /> Hamutay <span>Schools</span>
             </div>
             <div style={{ display: 'flex', gap: '2rem' }}>
               <a href="#" style={{ color: 'var(--color-text-muted)', textDecoration: 'none' }}>Plataforma</a>
