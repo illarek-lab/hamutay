@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { 
   LogOut, Menu, Loader2, Building2, User, Shield, 
   BookOpen, GraduationCap, CalendarDays, ClipboardList, 
-  MessageSquare, Settings, Home, Bell
+  MessageSquare, Settings, Home, Bell, Users
 } from 'lucide-react';
 import StorageImage from '../components/StorageImage';
+import ModuleSchoolUsers from './modules/ModuleSchoolUsers';
 
 export default function SchoolPortal() {
   const navigate = useNavigate();
@@ -145,6 +146,11 @@ export default function SchoolPortal() {
               {isCollapsed ? '—' : 'Comunicación'}
             </div>
             <SidebarItem id="messages" icon={MessageSquare} label="Mensajes" />
+
+            <div style={{ marginTop: '1.2rem', marginBottom: '0.3rem', paddingLeft: isCollapsed ? '0' : '1rem', textAlign: isCollapsed ? 'center' : 'left', fontSize: '0.75rem', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {isCollapsed ? '—' : 'Administración'}
+            </div>
+            <SidebarItem id="school-users" icon={Users} label="Usuarios del Colegio" />
           </nav>
         </aside>
 
@@ -268,6 +274,10 @@ export default function SchoolPortal() {
                 )}
               </div>
             </div>
+          )}
+
+          {activeModule === 'school-users' && meData && (
+            <ModuleSchoolUsers schoolId={meData.school_id} />
           )}
 
           {/* Placeholder for future modules */}
