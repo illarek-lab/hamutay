@@ -9,12 +9,16 @@ import {
   Settings,
   Building2,
   ShieldCheck,
-  Menu
+  Menu,
+  Library,
+  CalendarDays
 } from 'lucide-react';
 import PlatformTable from '../components/PlatformTable';
 import ModuleUsers from './modules/ModuleUsers';
 import ModuleSchools from './modules/ModuleSchools';
 import ModuleSchoolRoles from './modules/ModuleSchoolRoles';
+import ModuleAcademicStructure from './modules/ModuleAcademicStructure';
+import ModuleAcademicPlans from './modules/ModuleAcademicPlans';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -97,7 +101,21 @@ export default function Dashboard() {
               {isCollapsed ? '---' : 'Colegios'}
             </div>
             <SidebarItem id="schools" icon={BookOpen} label="Habilitar Colegios" />
-            <SidebarItem id="school-roles" icon={ShieldCheck} label="Roles y Accesos" />
+
+            <div style={{ marginTop: '1.2rem', marginBottom: '0.3rem', paddingLeft: isCollapsed ? '0' : '1rem', textAlign: isCollapsed ? 'center' : 'left', fontSize: '0.75rem', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+              {isCollapsed ? '---' : 'Roles y Accesos'}
+            </div>
+            <SidebarItem id="school-roles" icon={ShieldCheck} label="Perfiles Jerárquicos" />
+
+            <div style={{ marginTop: '1.2rem', marginBottom: '0.3rem', paddingLeft: isCollapsed ? '0' : '1rem', textAlign: isCollapsed ? 'center' : 'left', fontSize: '0.75rem', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+              {isCollapsed ? '---' : 'Estructura Curricular'}
+            </div>
+            <SidebarItem id="academic-structure" icon={Library} label="Malla Curricular" />
+
+            <div style={{ marginTop: '1.2rem', marginBottom: '0.3rem', paddingLeft: isCollapsed ? '0' : '1rem', textAlign: isCollapsed ? 'center' : 'left', fontSize: '0.75rem', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+              {isCollapsed ? '---' : 'Periodos Académicos'}
+            </div>
+            <SidebarItem id="academic-plans" icon={CalendarDays} label="Planes y Periodos" />
 
             <div style={{ marginTop: '1.2rem', marginBottom: '0.3rem', paddingLeft: isCollapsed ? '0' : '1rem', textAlign: isCollapsed ? 'center' : 'left', fontSize: '0.75rem', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
               {isCollapsed ? '---' : 'Operaciones'}
@@ -115,6 +133,8 @@ export default function Dashboard() {
               {activeModule === 'users' && 'Gestión de Usuarios'}
               {activeModule === 'schools' && 'Infraestructura de Colegios'}
               {activeModule === 'school-roles' && 'Gestión de Roles y Permisos'}
+              {activeModule === 'academic-structure' && 'Malla Curricular'}
+              {activeModule === 'academic-plans' && 'Planes y Periodos'}
               {activeModule === 'plans' && 'Portafolio de Planes'}
               {activeModule === 'invoices' && 'Cobranza y Facturación'}
             </h1>
@@ -158,6 +178,14 @@ export default function Dashboard() {
 
           {activeModule === 'school-roles' && (
             <ModuleSchoolRoles />
+          )}
+
+          {activeModule === 'academic-structure' && (
+            <ModuleAcademicStructure />
+          )}
+
+          {activeModule === 'academic-plans' && (
+            <ModuleAcademicPlans />
           )}
 
           {activeModule === 'plans' && (
