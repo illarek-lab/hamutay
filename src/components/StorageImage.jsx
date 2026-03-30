@@ -17,7 +17,10 @@ export default function StorageImage({ fileKey, alt, style, fallbackName }) {
     
     let isMounted = true;
     const token = localStorage.getItem('token');
-    fetch(`http://localhost:8000/platform/storage/view?key=${encodeURIComponent(fileKey)}`, {
+    const loginType = localStorage.getItem('loginType') || 'school';
+    const apiBase = loginType === 'platform' ? 'platform' : 'schools';
+
+    fetch(`http://localhost:8000/${apiBase}/storage/view?key=${encodeURIComponent(fileKey)}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(r => { if (!r.ok) throw new Error('R2 Error'); return r.json(); })
