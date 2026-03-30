@@ -57,8 +57,9 @@ export default function ModuleSchoolUsers({ schoolId }) {
   };
 
   const fetchRoles = async () => {
+    if (!schoolId) return;
     try {
-      const response = await fetch(`http://localhost:8000/platform/roles`, {
+      const response = await fetch(`http://localhost:8000/schools/${schoolId}/admin/roles`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
