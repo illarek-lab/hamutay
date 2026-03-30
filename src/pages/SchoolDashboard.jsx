@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, ArrowLeft, Building2, UserPlus, Shield, Mail, Phone, MapPin, Globe, Search, UserCheck, UserX, X, Edit2, Trash2, RefreshCcw, UploadCloud, User, Eye, Menu, LogOut } from 'lucide-react';
 import StorageImage from '../components/StorageImage';
+import { API_URL } from '../config';
 
 export default function SchoolDashboard() {
   const { id } = useParams();
@@ -66,13 +67,13 @@ export default function SchoolDashboard() {
       const headers = { 'Authorization': `Bearer ${token}` };
 
       // 1. Fetch school details
-      const schRes = await fetch(`${import.meta.env.VITE_API_URL}/platform/schools/${id}`, { headers });
+      const schRes = await fetch(`${API_URL}/platform/schools/${id}`, { headers });
       if (!schRes.ok) throw new Error('No se pudo cargar la información del colegio.');
       const schData = await schRes.json();
       setSchool(schData);
 
       // 2. Fetch global roles (para el dropdown del form de creación)
-      const rolesRes = await fetch(`${import.meta.env.VITE_API_URL}/platform/roles`, { headers });
+      const rolesRes = await fetch(`${API_URL}/platform/roles`, { headers });
       if (rolesRes.ok) {
         let rData = await rolesRes.json();
         if (rData && rData.items) rData = rData.items; 
@@ -90,8 +91,8 @@ export default function SchoolDashboard() {
       setUsersLoading(true);
       const token = localStorage.getItem('token');
       const endpoint = activeTab === 'active' 
-        ? `${import.meta.env.VITE_API_URL}/platform/schools/${id}/users`
-        : `${import.meta.env.VITE_API_URL}/platform/schools/${id}/users/deleted`;
+        ? `${API_URL}/platform/schools/${id}/users`
+        : `${API_URL}/platform/schools/${id}/users/deleted`;
 
       const res = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -156,7 +157,7 @@ export default function SchoolDashboard() {
 
   const uploadAvatarToCloud = async (userId, file, token) => {
     try {
-      const preRes = await fetch(`${import.meta.env.VITE_API_URL}/platform/storage/presigned-url`, {
+      const preRes = await fetch(`${API_URL}/platform/storage/presigned-url`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ entity: 'school_user', entity_id: userId, filename: file.name, content_type: file.type || 'image/jpeg' })
@@ -171,7 +172,7 @@ export default function SchoolDashboard() {
       });
       if (!uploadRes.ok) throw new Error('Cloudflare rechazó el avatar');
 
-      const confirmRes = await fetch(`${import.meta.env.VITE_API_URL}/platform/storage/confirm`, {
+      const confirmRes = await fetch(`${API_URL}/platform/storage/confirm`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ entity: 'school_user', entity_id: userId, key: preData.key })
@@ -194,7 +195,7 @@ export default function SchoolDashboard() {
       if (!payload.birth_date) payload.birth_date = null;
       if (editingUser && !payload.password) delete payload.password;
 
-      const url = editingUser ? `${import.meta.env.VITE_API_URL}/platform/schools/${id}/users/${editingUser.id}` : `${import.meta.env.VITE_API_URL}/platform/schools/${id}/users`;
+      const url = editingUser ? `${API_URL}/platform/schools/${id}/users/${editingUser.id}` : `${API_URL}/platform/schools/${id}/users`;
       const method = editingUser ? 'PATCH' : 'POST';
 
       const res = await fetch(url, {
@@ -229,7 +230,7 @@ export default function SchoolDashboard() {
     if (!window.confirm('¿Desactivar y mover este usuario a la papelera? Perderá su acceso.')) return;
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${import.meta.env.VITE_API_URL}/platform/schools/${id}/users/${userId}`, {
+      await fetch(`${API_URL}/platform/schools/${id}/users/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -243,7 +244,7 @@ export default function SchoolDashboard() {
     if (!window.confirm('¿Restaurar acceso a este usuario del colegio?')) return;
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${import.meta.env.VITE_API_URL}/platform/schools/${id}/users/${userId}/restore`, {
+      await fetch(`${API_URL}/platform/schools/${id}/users/${userId}/restore`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

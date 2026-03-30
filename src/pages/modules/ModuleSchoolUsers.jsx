@@ -4,6 +4,7 @@ import {
   AlertCircle, UserCheck, Eye, GraduationCap, Briefcase, UserPlus
 } from 'lucide-react';
 import StorageImage from '../../components/StorageImage';
+import { API_URL } from '../../config';
 
 export default function ModuleSchoolUsers({ schoolId, initialFilter = '' }) {
   const [users, setUsers] = useState([]);
@@ -65,7 +66,7 @@ export default function ModuleSchoolUsers({ schoolId, initialFilter = '' }) {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/schools/${schoolId}/admin/users`, {
+      const response = await fetch(`${API_URL}/schools/${schoolId}/admin/users`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -81,7 +82,7 @@ export default function ModuleSchoolUsers({ schoolId, initialFilter = '' }) {
   const fetchRoles = async () => {
     if (!schoolId) return;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/schools/${schoolId}/admin/roles`, {
+      const response = await fetch(`${API_URL}/schools/${schoolId}/admin/roles`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
@@ -180,8 +181,8 @@ export default function ModuleSchoolUsers({ schoolId, initialFilter = '' }) {
     setError(null);
 
     const endpoint = editingUser 
-      ? `${import.meta.env.VITE_API_URL}/schools/${schoolId}/admin/users/${editingUser.id}` 
-      : `${import.meta.env.VITE_API_URL}/schools/${schoolId}/admin/users`;
+      ? `${API_URL}/schools/${schoolId}/admin/users/${editingUser.id}` 
+      : `${API_URL}/schools/${schoolId}/admin/users`;
     const method = editingUser ? 'PUT' : 'POST';
 
     const payload = { ...formData };
@@ -218,7 +219,7 @@ export default function ModuleSchoolUsers({ schoolId, initialFilter = '' }) {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Está seguro de eliminar este usuario?')) return;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/schools/${schoolId}/admin/users/${id}`, {
+      const response = await fetch(`${API_URL}/schools/${schoolId}/admin/users/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

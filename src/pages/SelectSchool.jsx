@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, ArrowLeft, Loader2, ChevronRight } from 'lucide-react';
+import { API_URL } from '../config';
 
 export default function SelectSchool() {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export default function SelectSchool() {
     setError(null);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/schools/auth/select-school`, {
+      const response = await fetch(`${API_URL}/schools/auth/select-school`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

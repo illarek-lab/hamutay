@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, ShieldAlert, Plus, ShieldCheck, CheckSquare, Square, Trash2 } from 'lucide-react';
+import { API_URL } from '../../config';
 
 const getResourceLabel = (slug) => {
   const labels = {
@@ -49,7 +50,7 @@ export default function ModuleSchoolRoles() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/platform/roles`, {
+      const res = await fetch(`${API_URL}/platform/roles`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -65,7 +66,7 @@ export default function ModuleSchoolRoles() {
     try {
       setPermsLoading(true);
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/platform/roles/${roleId}/permissions`, {
+      const res = await fetch(`${API_URL}/platform/roles/${roleId}/permissions`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -82,7 +83,7 @@ export default function ModuleSchoolRoles() {
     try {
       setRoleSubmitting(true);
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/platform/roles`, {
+      const res = await fetch(`${API_URL}/platform/roles`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(newRole)
@@ -102,7 +103,7 @@ export default function ModuleSchoolRoles() {
     if(!window.confirm('¿Seguro de desvincular este Rol? Los administradores con este rol perderán acceso.')) return;
     try {
       const token = localStorage.getItem('token');
-      await fetch(`${import.meta.env.VITE_API_URL}/platform/roles/${roleId}`, {
+      await fetch(`${API_URL}/platform/roles/${roleId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -120,7 +121,7 @@ export default function ModuleSchoolRoles() {
       if (!existingPerm) return;
 
       const permId = existingPerm.id || existingPerm.permission_id;
-      await fetch(`${import.meta.env.VITE_API_URL}/platform/roles/${selectedRole.id}/permissions/${permId}`, {
+      await fetch(`${API_URL}/platform/roles/${selectedRole.id}/permissions/${permId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ is_allowed: !existingPerm.is_allowed })

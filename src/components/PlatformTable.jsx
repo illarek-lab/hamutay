@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../config';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function PlatformTable({ title, description, endpoint, columns }) {
@@ -13,7 +14,7 @@ export default function PlatformTable({ title, description, endpoint, columns })
         setError(null);
         
         const token = localStorage.getItem('token');
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/platform/${endpoint}`, {
+        const response = await fetch(`${API_URL}/platform/${endpoint}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

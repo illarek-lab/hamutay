@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Plus, Pencil, Trash2, BookOpen, GraduationCap, Library, Link2 } from 'lucide-react';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import { API_URL } from '../../config';
+const API = API_URL;
 const getToken = () => localStorage.getItem('token');
 const isPlatform = () => localStorage.getItem('loginType') !== 'school';
 

@@ -6,6 +6,7 @@ import {
   MessageSquare, Settings, Home, Bell, Users, Briefcase,
   ChevronDown, ChevronRight
 } from 'lucide-react';
+import { API_URL } from '../config';
 import StorageImage from '../components/StorageImage';
 import ModuleSchoolUsers from './modules/ModuleSchoolUsers';
 
@@ -31,7 +32,7 @@ export default function SchoolPortal() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/schools/auth/me`, {
+      const res = await fetch(`${API_URL}/schools/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Sesión expirada o inválida');

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Plus, Edit2, Trash2, Building2, Search, X, AlertCircle, RefreshCcw, LayoutGrid, AlertTriangle, UploadCloud, Eye } from 'lucide-react';
 import StorageImage from '../../components/StorageImage';
+import { API_URL } from '../../config';
 
 export default function ModuleSchools() {
   const navigate = useNavigate();
@@ -50,8 +51,8 @@ export default function ModuleSchools() {
       const token = localStorage.getItem('token');
       
       const endpoint = activeTab === 'active' 
-        ? `${import.meta.env.VITE_API_URL}/platform/schools` 
-        : `${import.meta.env.VITE_API_URL}/platform/schools/deleted`;
+        ? `${API_URL}/platform/schools` 
+        : `${API_URL}/platform/schools/deleted`;
 
       const response = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -127,7 +128,7 @@ export default function ModuleSchools() {
     
     // 1. Obtener boleto de Subida y Key interna
     try {
-      const preRes = await fetch(`${import.meta.env.VITE_API_URL}/platform/storage/presigned-url`, {
+      const preRes = await fetch(`${API_URL}/platform/storage/presigned-url`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ entity: 'school', entity_id: schoolId, filename: file.name, content_type: file.type || 'image/jpeg' })
@@ -154,7 +155,7 @@ export default function ModuleSchools() {
 
     // 3. Confirmación ligando el KEY a la DB
     try {
-      const confirmRes = await fetch(`${import.meta.env.VITE_API_URL}/platform/storage/confirm`, {
+      const confirmRes = await fetch(`${API_URL}/platform/storage/confirm`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ entity: 'school', entity_id: schoolId, key: file_key })
@@ -172,8 +173,8 @@ export default function ModuleSchools() {
 
     const token = localStorage.getItem('token');
     const endpoint = editingSchool 
-      ? `${import.meta.env.VITE_API_URL}/platform/schools/${editingSchool.id}` 
-      : `${import.meta.env.VITE_API_URL}/platform/schools`;
+      ? `${API_URL}/platform/schools/${editingSchool.id}` 
+      : `${API_URL}/platform/schools`;
     const method = editingSchool ? 'PATCH' : 'POST';
 
     try {
@@ -213,7 +214,7 @@ export default function ModuleSchools() {
     if (!window.confirm('¿Deseas suspender este Colegio moviéndolo a la papelera (Soft Delete)?')) return;
     try {
        const token = localStorage.getItem('token');
-       const response = await fetch(`${import.meta.env.VITE_API_URL}/platform/schools/${id}`, {
+       const response = await fetch(`${API_URL}/platform/schools/${id}`, {
          method: 'DELETE',
          headers: { 'Authorization': `Bearer ${token}` }
        });
@@ -226,7 +227,7 @@ export default function ModuleSchools() {
     if (!window.confirm('¿Estás seguro de reactivar este colegio para reconectarlo al sistema?')) return;
     try {
        const token = localStorage.getItem('token');
-       const response = await fetch(`${import.meta.env.VITE_API_URL}/platform/schools/${id}/restore`, {
+       const response = await fetch(`${API_URL}/platform/schools/${id}/restore`, {
          method: 'POST',
          headers: { 'Authorization': `Bearer ${token}` }
        });

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Plus, Edit2, Trash2, Shield, Search, X, AlertCircle, RefreshCcw, UserCheck, UserX } from 'lucide-react';
+import { API_URL } from '../../config';
 
 export default function ModuleUsers() {
   const [users, setUsers] = useState([]);
@@ -26,8 +27,8 @@ export default function ModuleUsers() {
       const token = localStorage.getItem('token');
       
       const endpoint = activeTab === 'active' 
-        ? `${import.meta.env.VITE_API_URL}/platform/users` 
-        : `${import.meta.env.VITE_API_URL}/platform/users/deleted`;
+        ? `${API_URL}/platform/users` 
+        : `${API_URL}/platform/users/deleted`;
 
       const response = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -88,8 +89,8 @@ export default function ModuleUsers() {
 
     const token = localStorage.getItem('token');
     const endpoint = editingUser 
-      ? `${import.meta.env.VITE_API_URL}/platform/users/${editingUser.id}` 
-      : `${import.meta.env.VITE_API_URL}/platform/users`;
+      ? `${API_URL}/platform/users/${editingUser.id}` 
+      : `${API_URL}/platform/users`;
     const method = editingUser ? 'PATCH' : 'POST';
 
     const payload = { ...formData };
@@ -120,7 +121,7 @@ export default function ModuleUsers() {
     if (!window.confirm('¿Está seguro de mover este usuario a la papelera?')) return;
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/platform/users/${id}`, {
+      const response = await fetch(`${API_URL}/platform/users/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -138,7 +139,7 @@ export default function ModuleUsers() {
     if (!window.confirm('¿Desea restaurar a este usuario y devolverle su acceso?')) return;
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/platform/users/${id}/restore`, {
+      const response = await fetch(`${API_URL}/platform/users/${id}/restore`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

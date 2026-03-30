@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../config';
 import { Loader2 } from 'lucide-react';
 
 export default function StorageImage({ fileKey, alt, style, fallbackName }) {
@@ -20,7 +21,7 @@ export default function StorageImage({ fileKey, alt, style, fallbackName }) {
     const loginType = localStorage.getItem('loginType') || 'school';
     const apiBase = loginType === 'platform' ? 'platform' : 'schools';
 
-    fetch(`${import.meta.env.VITE_API_URL}/${apiBase}/storage/view?key=${encodeURIComponent(fileKey)}`, {
+    fetch(`${API_URL}/${apiBase}/storage/view?key=${encodeURIComponent(fileKey)}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(r => { if (!r.ok) throw new Error('R2 Error'); return r.json(); })

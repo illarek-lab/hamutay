@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Shield, Users, Loader2 } from 'lucide-react';
+import { API_URL } from '../config';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -19,7 +20,7 @@ export default function Login() {
     if (loginType === 'platform') {
       // ──── Platform Admin Login ────
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/platform/auth/login`, {
+        const response = await fetch(`${API_URL}/platform/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
@@ -40,7 +41,7 @@ export default function Login() {
     } else {
       // ──── School User Login (2-step flow) ────
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/schools/auth/login`, {
+        const response = await fetch(`${API_URL}/schools/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
