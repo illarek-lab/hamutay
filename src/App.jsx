@@ -4,6 +4,8 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import SchoolDashboard from './pages/SchoolDashboard';
+import SelectSchool from './pages/SelectSchool';
+import SchoolPortal from './pages/SchoolPortal';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Layout para Rutas Públicas (agrega el Header y Footer)
@@ -51,7 +53,7 @@ function PublicLayout() {
 function App() {
   return (
     <BrowserRouter>
-      {/* Decorative Global Background (Opcional aislarlo tmb, pero queda bonito global) */}
+      {/* Decorative Global Background */}
       <div className="glow-blob blob-1"></div>
       <div className="glow-blob blob-2"></div>
       <div className="glow-blob blob-3"></div>
@@ -63,7 +65,10 @@ function App() {
           <Route path="/login" element={<Login />} />
         </Route>
 
-        {/* Rutas Privadas / Internas */}
+        {/* Selector de Colegio (semi-público — necesita datos en sessionStorage) */}
+        <Route path="/select-school" element={<SelectSchool />} />
+
+        {/* Rutas Privadas / Platform Admin */}
         <Route 
           path="/dashboard" 
           element={
@@ -77,6 +82,16 @@ function App() {
           element={
             <ProtectedRoute>
               <SchoolDashboard />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* Portal Escolar (School Users) */}
+        <Route 
+          path="/school-portal" 
+          element={
+            <ProtectedRoute>
+              <SchoolPortal />
             </ProtectedRoute>
           } 
         />

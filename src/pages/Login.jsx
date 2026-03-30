@@ -16,35 +16,59 @@ export default function Login() {
     setLoading(true);
     setError(null);
 
-    const endpoint = loginType === 'platform' 
-      ? 'http://localhost:8000/platform/auth/login'
-      : 'http://localhost:8000/tenant/auth/login';
+    if (loginType === 'platform') {
+      // ──── Platform Admin Login ────
+      try {
+        const response = await fetch('http://localhost:8000/platform/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || 'Credenciales inválidas o error de servidor');
 
-    try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || 'Credenciales inválidas o error de servidor');
+        localStorage.setItem('token', data.access_token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('loginType', 'platform');
+        navigate('/dashboard');
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
 
-      // Success snippet
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
-      // Navigate to dashboard based on role later, 
-      // Redirect to the protected dashboard
-      navigate('/dashboard');
-      
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    } else {
+      // ──── School User Login (2-step flow) ────
+      try {
+        const response = await fetch('http://localhost:8000/schools/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || 'Credenciales inválidas o error de servidor');
+
+        if (data.requires_school_selection) {
+          // Multiple schools → go to school selector page
+          // Pass credentials and school list via sessionStorage (not localStorage for security)
+          sessionStorage.setItem('pending_login', JSON.stringify({
+            email,
+            password,
+            schools: data.schools
+          }));
+          navigate('/select-school');
+        } else {
+          // Single school → token returned directly
+          localStorage.setItem('token', data.access_token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          localStorage.setItem('loginType', 'school');
+          navigate('/school-portal');
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
