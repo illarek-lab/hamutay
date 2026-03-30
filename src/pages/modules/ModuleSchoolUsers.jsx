@@ -355,7 +355,7 @@ export default function ModuleSchoolUsers({ schoolId }) {
                     : modalMode === 'profesor' 
                       ? 'Crear Profesor' 
                       : modalMode === 'alumno' 
-                        ? 'Inscribir Alumno' 
+                        ? 'Crear Alumno' 
                         : 'Nuevo Usuario'}
                 </h2>
               </div>
@@ -455,7 +455,7 @@ export default function ModuleSchoolUsers({ schoolId }) {
                     : modalMode === 'profesor'
                       ? 'Registrar Profesor'
                       : modalMode === 'alumno'
-                        ? 'Confirmar Matrícula'
+                        ? 'Registrar Alumno'
                         : 'Crear Usuario'}
                 </button>
               </div>

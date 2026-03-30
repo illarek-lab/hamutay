@@ -1,14 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, ShieldAlert, Plus, ShieldCheck, CheckSquare, Square, Trash2 } from 'lucide-react';
 
-const STANDARD_RESOURCES = [
-  { id: 'users', label: 'Usuarios y Staff' },
-  { id: 'students', label: 'Estudiantes' },
-  { id: 'teachers', label: 'Profesores / Académico' },
-  { id: 'billing', label: 'Cajas y Cobranza' },
-  { id: 'grades', label: 'Registro de Notas' },
-  { id: 'settings', label: 'Configuración Interna' }
-];
+const getResourceLabel = (slug) => {
+  const labels = {
+    'users': 'Usuarios y Staff',
+    'students': 'Gestión de Alumnos',
+    'schools': 'Configuración de Colegio',
+    'academic_levels': 'Estructura: Niveles',
+    'academic_grades': 'Estructura: Grados',
+    'academic_courses': 'Catálogo de Cursos',
+    'academic_grade_courses': 'Cursos por Grado',
+    'academic_plans': 'Planes Académicos',
+    'academic_terms': 'Períodos (Bimestres/Trimestres)',
+    'academic_plan_courses': 'Cursos en Plan de Estudios',
+    'billing': 'Pagos y Pensiones',
+    'settings': 'Ajustes del Sistema'
+  };
+  return labels[slug] || slug.replace(/_/g, ' ').toUpperCase();
+};
 
 export default function ModuleSchoolRoles() {
   const [roles, setRoles] = useState([]);
@@ -56,11 +65,11 @@ export default function ModuleSchoolRoles() {
     try {
       setPermsLoading(true);
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:8000/platform/permissions?role_id=${roleId}`, {
+      const res = await fetch(`http://localhost:8000/platform/roles/${roleId}/permissions`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
-      setPermissions(Array.isArray(data) ? data : (data.items || []));
+      setPermissions(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -108,24 +117,26 @@ export default function ModuleSchoolRoles() {
     const token = localStorage.getItem('token');
 
     try {
-      if (existingPerm) {
-        // DELETE
-        await fetch(`http://localhost:8000/platform/permissions/${existingPerm.id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-      } else {
-        // POST
-        await fetch(`http://localhost:8000/platform/permissions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ role_id: selectedRole.id, resource, action, is_allowed: true })
-        });
-      }
-      // Refresh to get safe remote state
-      fetchPermissions(selectedRole.id);
+      if (!existingPerm) return;
+
+      const permId = existingPerm.id || existingPerm.permission_id;
+      await fetch(`http://localhost:8000/platform/roles/${selectedRole.id}/permissions/${permId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ is_allowed: !existingPerm.is_allowed })
+      });
+      
+      // Update local state for immediate feedback
+      setPermissions(prev => prev.map(p => {
+        const currentId = p.id || p.permission_id;
+        if (permId && currentId === permId) {
+          return { ...p, is_allowed: !p.is_allowed };
+        }
+        return p;
+      }));
     } catch(err) {
       console.error("Fallo actualizando permisos: ", err);
+      fetchPermissions(selectedRole.id); // Rollback on error
     }
   };
 
@@ -211,22 +222,26 @@ export default function ModuleSchoolRoles() {
                  </p>
                  
                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                    {STANDARD_RESOURCES.map(res => (
-                      <div key={res.id} style={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: '12px', padding: '1rem' }}>
+                    {[...new Set(permissions.map(p => p.resource))]
+                      .sort((a, b) => getResourceLabel(a).localeCompare(getResourceLabel(b)))
+                      .map(resId => (
+                      <div key={resId} style={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: '12px', padding: '1rem' }}>
                         <h4 style={{ margin: '0 0 0.8rem 0', fontSize: '0.95rem', color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                           {res.label} 
-                           <span style={{ fontSize: '0.7rem', background: '#F3F4F6', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid #E5E7EB', color: '#6B7280' }}>{res.id}</span>
+                           {getResourceLabel(resId)} 
+                           <span style={{ fontSize: '0.7rem', background: '#F3F4F6', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid #E5E7EB', color: '#6B7280' }}>{resId}</span>
                         </h4>
                         
                         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                           {['create', 'read', 'update', 'delete'].map(act => {
-                             const checked = hasPermission(res.id, act);
+                             const permObj = permissions.find(p => p.resource === resId && p.action === act);
+                             if (!permObj) return null;
+                             const checked = permObj.is_allowed;
                              return (
                                <label key={act} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer', fontSize: '0.85rem', userSelect: 'none', background: checked ? 'rgba(105, 151, 126, 0.08)' : 'transparent', padding: '0.3rem 0.6rem', borderRadius: '6px', border: checked ? '1px solid rgba(105, 151, 126, 0.3)' : '1px solid transparent', transition: 'all 0.1s' }}>
                                  {checked ? <CheckSquare size={16} color="var(--color-tertiary)"/> : <Square size={16} color="var(--color-text-muted)"/>}
                                  {act === 'create' ? 'Crear' : act === 'read' ? 'Ver' : act === 'update' ? 'Editar' : 'Borrar'}
                                  {/* Checkbox oscuro/real por debajo */}
-                                 <input type="checkbox" checked={checked} onChange={() => togglePermission(res.id, act)} style={{ display: 'none' }} />
+                                 <input type="checkbox" checked={checked} onChange={() => togglePermission(resId, act)} style={{ display: 'none' }} />
                                </label>
                              );
                           })}
