@@ -8,7 +8,7 @@ module.exports = {
         NODE_ENV: 'production',
       },
       instances: 1,
-      exec_mode: 'cluster',
+      exec_mode: 'fork',
       watch: false,
       max_memory_restart: '500M',
       error_file: './pm2_logs/error.log',

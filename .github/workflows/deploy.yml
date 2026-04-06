@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-deploy:
-    name: Build & Deploy to Production
+    name: Build & Deploy
     runs-on: ubuntu-latest
 
     steps:
@@ -43,22 +43,16 @@ jobs:
           VITE_APP_URL: ${{ secrets.VITE_APP_URL_PROD }}
         run: pnpm run build
 
-      - name: 📤 Deploy to VPS
-        uses: appleboy/ssh-action@v1.0.3
+      - name: 📤 Copy dist to VPS
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ~/open_projects/hamutay
-            echo "Current commit before pull:"
-            git log --oneline -1
-            git fetch origin
-            git reset --hard origin/main
-            echo "Current commit after pull:"
-            git log --oneline -1
+          source: "dist/,ecosystem.config.js"
+          target: "~/open_projects/hamutay/"
 
-      - name: 📦 Install & Build on Server
+      - name: 🚀 Start/Restart app with pm2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_IP }}
@@ -66,31 +60,11 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ~/open_projects/hamutay
-            corepack enable
-            pnpm install --frozen-lockfile
-            VITE_API_URL=${{ secrets.VITE_API_URL_PROD }} \
-            VITE_APP_URL=${{ secrets.VITE_APP_URL_PROD }} \
-            pnpm run build
-
-      - name: 🚀 Deploy app with pm2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ~/open_projects/hamutay
-            # Backup current dist
-            [ -d dist ] && cp -r dist dist.backup.$(date +%Y%m%d_%H%M%S)
-            # Install serve if not present
             npm list -g serve > /dev/null 2>&1 || npm install -g serve
-            # Create logs directory
             mkdir -p pm2_logs
-            # Restart app with pm2 using ecosystem config
-            pm2 restart ecosystem.config.js || pm2 start ecosystem.config.js
+            pm2 restart ecosystem.config.js --update-env || pm2 start ecosystem.config.js
             pm2 save
-            pm2 logs hamutay_frontend --lines 10
-            echo "✅ App deployed with pm2"
+            echo "✅ App deployed"
 
       - name: ✅ Health check
         uses: appleboy/ssh-action@v1.0.3
