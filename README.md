@@ -2,7 +2,7 @@
 
 Plataforma principal de gestión e infraestructura administrativa para los colegios suscritos a Hamutay. Este repositorio contiene el **frontend** web (React + Vite + TypeScript), con diseño en CSS puro (tema andino, _glassmorphism_).
 
-**Documentación detallada:** [docs/index.md](docs/index.md) (configuración, calidad de código, editor, arquitectura).
+**Documentación detallada:** [docs/index.md](docs/index.md) (configuración, calidad de código, editor, arquitectura). <!-- v2 -->
 
 ## Gestor de paquetes
 
