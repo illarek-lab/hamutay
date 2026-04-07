@@ -58,7 +58,13 @@ function PublicLayout() {
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2026 Hamutay API. Creado con raíces andinas y visión global.</p>
+            <p>
+              <strong>Hamutay: pensar para comprender.</strong>
+            </p>
+            <p>
+              &copy; {new Date().getFullYear()} Hamutay. Tecnología abierta para la soberanía
+              educativa.
+            </p>
           </div>
         </div>
       </footer>
