@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, Link, Outlet } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -10,11 +11,13 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 // Layout para Rutas Públicas (agrega el Header y Footer)
 function PublicLayout() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <>
       <header className="header glass">
         <div className="container header-content">
-          <Link to="/" className="logo">
+          <Link to="/" className="logo" onClick={() => setIsMenuOpen(false)}>
             <img
               src="/bear-logo.png"
               alt="Hamutay Logo"
@@ -22,11 +25,45 @@ function PublicLayout() {
             />{" "}
             Hamutay <span>Schools</span>
           </Link>
-          <nav>
+
+          <nav className="desktop-nav">
             <Link to="/login" className="btn btn-secondary" style={{ padding: "0.5rem 1.2rem" }}>
               Iniciar Sesión
             </Link>
           </nav>
+
+          <button
+            className="mobile-menu-toggle"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Menu Overlay */}
+        <div className={`mobile-menu-overlay ${isMenuOpen ? "open" : ""}`}>
+          <div className="mobile-menu-content">
+            <Link
+              to="/login"
+              className="btn btn-primary btn-lg"
+              style={{ width: "100%" }}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Iniciar Sesión
+            </Link>
+            <nav className="mobile-nav-links">
+              <Link to="/" onClick={() => setIsMenuOpen(false)}>
+                Inicio
+              </Link>
+              <a href="#solucion" onClick={() => setIsMenuOpen(false)}>
+                Solución
+              </a>
+              <a href="#contacto" onClick={() => setIsMenuOpen(false)}>
+                Contacto
+              </a>
+            </nav>
+          </div>
         </div>
       </header>
 
