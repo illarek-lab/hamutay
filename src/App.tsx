@@ -30,22 +30,44 @@ function PublicLayout() {
         </div>
       </header>
 
-      <main style={{ minHeight: "calc(100vh - 200px)" }}>
+      <main style={{ minHeight: "calc(100vh - 200px)", paddingTop: "80px" }}>
         <Outlet />
       </main>
+
+      {/* <section className="collaborators-section">
+        <div className="container text-center">
+          <h3 className="section-title" style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>
+            Nuestros Colaboradores
+          </h3>
+          <p className="section-desc" style={{ fontSize: "1rem" }}>
+            Instituciones y organizaciones que impulsan la equidad educativa.
+          </p>
+          <div className="collaborators-grid">
+            <a href="#" className="collab-placeholder">
+              Logo Colaborador
+            </a>
+            <a href="#" className="collab-placeholder">
+              Logo Colaborador
+            </a>
+            <a href="#" className="collab-placeholder">
+              Logo Colaborador
+            </a>
+          </div>
+        </div>
+      </section> */}
 
       <footer className="footer">
         <div className="container">
           <div className="footer-content">
-            <div className="logo" style={{ fontSize: "1.2rem" }}>
+            <Link to="/" className="logo">
               <img
                 src="/bear-logo.png"
                 alt="Hamutay Logo"
-                style={{ width: "28px", height: "28px", borderRadius: "6px" }}
+                style={{ width: "36px", height: "36px", borderRadius: "8px" }}
               />{" "}
               Hamutay <span>Schools</span>
-            </div>
-            <div style={{ display: "flex", gap: "2rem" }}>
+            </Link>
+            <nav style={{ display: "flex", gap: "2rem" }}>
               <Link to="/" style={{ color: "var(--color-text-muted)", textDecoration: "none" }}>
                 Plataforma
               </Link>
@@ -55,12 +77,10 @@ function PublicLayout() {
               <Link to="/" style={{ color: "var(--color-text-muted)", textDecoration: "none" }}>
                 Políticas
               </Link>
-            </div>
+            </nav>
           </div>
           <div className="footer-bottom">
-            <p>
-              <strong>Hamutay: pensar para comprender.</strong>
-            </p>
+            <strong>Hamutay: pensar para comprender.</strong>
             <p>
               &copy; {new Date().getFullYear()} Hamutay. Tecnología abierta para la soberanía
               educativa.

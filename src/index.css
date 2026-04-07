@@ -479,10 +479,66 @@ a {
   margin-top: 3rem;
 }
 
+/* --- Collaborators --- */
+.collaborators-section {
+  padding: 80px 0;
+  background: var(--color-bg-alt);
+}
+
+.collaborators-grid {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5rem;
+  flex-wrap: wrap;
+  margin-top: 3rem;
+}
+
+.collab-placeholder {
+  width: 150px;
+  height: 50px;
+  background: rgba(45, 55, 63, 0.05);
+  border: 1px dashed rgba(45, 55, 63, 0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  transition: var(--transition);
+}
+
+.collab-placeholder:hover {
+  background: rgba(45, 55, 63, 0.1);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
 /* --- Footer --- */
-.landing-footer {
-  padding: 3rem 0;
+.footer {
+  padding: 100px 0 50px;
+  background: var(--color-white);
   border-top: 1px solid rgba(45, 55, 63, 0.05);
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 80px;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 50px;
+  border-top: 1px solid rgba(45, 55, 63, 0.05);
+  line-height: 2;
+}
+
+.footer-bottom strong {
+  display: block;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
 }
 
 /* --- Decorative --- */

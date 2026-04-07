@@ -260,6 +260,51 @@ export default function Landing() {
 
       {/* Benefits Section */}
       <section className="benefits-section">
+        {/* <section className="benefits-section" id="impacto">
+        <div className="container">
+          <div className="benefit-flex">
+            <div className="benefit-text">
+              <h2 className="section-title">Impacto en la Gestión</h2>
+              <p className="section-desc">
+                Herramientas diseñadas para fortalecer el trabajo docente y administrativo,
+                reduciendo la carga burocrática.
+              </p>
+              <ul className="impact-list">
+                <li>
+                  <CheckCircle size={20} className="icon-success" />
+                  <span>Automatización de registros académicos</span>
+                </li>
+                <li>
+                  <CheckCircle size={20} className="icon-success" />
+                  <span>Acompañamiento individual del aprendizaje</span>
+                </li>
+                <li>
+                  <CheckCircle size={20} className="icon-success" />
+                  <span>Reportes inteligentes para toma de decisiones</span>
+                </li>
+              </ul>
+            </div>
+            <div className="benefit-visual">
+              <div className="data-dashboard-preview premium-glass">
+                <h4>Panel de Control Escolar</h4>
+                <div className="preview-chart">
+                  <div
+                    style={{
+                      height: "100%",
+                      width: "60%",
+                      background: "rgba(105, 151, 126, 0.4)",
+                      borderRadius: "10px",
+                    }}
+                  ></div>
+                </div>
+                <p style={{ marginTop: "1.5rem", fontSize: "0.9rem" }}>
+                  Métricas de asistencia y rendimiento en tiempo real.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section> */}
         <div className="container benefit-flex">
           <div className="benefit-text">
             <h2 className="section-title">Impacto en la Gestión</h2>
